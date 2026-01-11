@@ -1,0 +1,22 @@
+[project]
+name = "plox"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "Kao Félix", email = "me@kaofelix.dev" }
+]
+requires-python = ">=3.12.1"
+dependencies = []
+
+[project.scripts]
+plox = "plox:main"
+
+[build-system]
+requires = ["uv_build>=0.9.6,<0.10.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.2",
+]
