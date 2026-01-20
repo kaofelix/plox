@@ -362,6 +362,26 @@ class TestComments:
         assert tokens[0].literal == 456.0
         assert tokens[0].line == 2
 
+    def test_block_comments(self):
+        scanner = Scanner("/* block comment */ 789")
+        tokens = scanner.scan_tokens()
+        assert len(tokens) == 2
+        assert tokens[0].type == TokenType.NUMBER
+        assert tokens[0].literal == 789.0
+
+    def test_eof_before_block_comment_closes(self):
+        scanner = Scanner("/* block comment eof")
+        tokens = scanner.scan_tokens()
+        assert len(tokens) == 1
+        assert tokens[0].type == TokenType.EOF
+
+    def test_nested_block_comments(self):
+        scanner = Scanner("/* block /* with another */ comment */ 789")
+        tokens = scanner.scan_tokens()
+        assert len(tokens) == 2
+        assert tokens[0].type == TokenType.NUMBER
+        assert tokens[0].literal == 789.0
+
 
 class TestWhitespace:
     def test_space_ignored(self):

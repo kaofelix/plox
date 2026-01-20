@@ -57,6 +57,27 @@ class Scanner:
                     # A comment goes until the end of the line.
                     while self.peek() != "\n" and not self.is_at_end():
                         self.advance()
+                elif self.match("*"):
+                    # A block comment goes until the closing delimiter
+                    level = 1
+                    while not self.is_at_end():
+                        self.advance()
+                        # nested comment open
+                        if self.peek() == "/" and self.peek_next() == "*":
+                            # skip over
+                            self.advance()
+                            self.advance()
+                            level += 1
+
+                        # nested comment close
+                        if self.peek() == "*" and self.peek_next() == "/":
+                            self.advance()
+                            self.advance()
+                            level -= 1
+
+                        if level <= 0:
+                            break
+
                 else:
                     self.add_token(TokenType.SLASH)
             case " " | "\r" | "\t":
