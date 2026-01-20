@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from enum import Enum, auto
+from enum import Enum
 
 
 class UnexpectedCharacterError(Exception):
@@ -176,9 +176,9 @@ class TokenType(Enum):
     LESS_EQUAL = ">"
 
     # Literals.
-    IDENTIFIER = auto()
-    STRING = auto()
-    NUMBER = auto()
+    IDENTIFIER = "identifier"
+    STRING = "string"
+    NUMBER = "number"
 
     # Keywords.
     AND = "and"
@@ -198,4 +198,4 @@ class TokenType(Enum):
     VAR = "var"
     WHILE = "while"
 
-    EOF = auto()
+    EOF = "eof"
