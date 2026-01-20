@@ -1,5 +1,4 @@
 import pytest
-
 from plox.scanner import (
     Scanner,
     Token,
@@ -403,9 +402,7 @@ class TestMultipleTokens:
     def test_complex_expression(self):
         scanner = Scanner("(1 + 2) * 3")
         tokens = scanner.scan_tokens()
-        assert [
-            t.type for t in tokens[:-1]
-        ] == [
+        assert [t.type for t in tokens[:-1]] == [
             TokenType.LEFT_PAREN,
             TokenType.NUMBER,
             TokenType.PLUS,
@@ -418,9 +415,7 @@ class TestMultipleTokens:
     def test_variable_declaration(self):
         scanner = Scanner("var x = 10;")
         tokens = scanner.scan_tokens()
-        assert [
-            t.type for t in tokens[:-1]
-        ] == [
+        assert [t.type for t in tokens[:-1]] == [
             TokenType.VAR,
             TokenType.IDENTIFIER,
             TokenType.EQUAL,
@@ -431,9 +426,7 @@ class TestMultipleTokens:
     def test_function_call(self):
         scanner = Scanner("print(x);")
         tokens = scanner.scan_tokens()
-        assert [
-            t.type for t in tokens[:-1]
-        ] == [
+        assert [t.type for t in tokens[:-1]] == [
             TokenType.PRINT,
             TokenType.LEFT_PAREN,
             TokenType.IDENTIFIER,
@@ -444,9 +437,7 @@ class TestMultipleTokens:
     def test_comparison_operators(self):
         scanner = Scanner("1 == 2 != 3 <= 4 >= 5 < 6 > 7")
         tokens = scanner.scan_tokens()
-        assert [
-            t.type for t in tokens[:-1]
-        ] == [
+        assert [t.type for t in tokens[:-1]] == [
             TokenType.NUMBER,
             TokenType.EQUAL_EQUAL,
             TokenType.NUMBER,
