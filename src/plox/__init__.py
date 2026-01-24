@@ -3,6 +3,9 @@ import sys
 from functools import singledispatch
 from pathlib import Path
 
+from packaging.tags import interpreter_name
+
+from plox import interpreter
 from plox.ast_printer import ast_printer
 from plox.parser import Parser
 from plox.scanner import Scanner, Token, TokenType
@@ -40,10 +43,10 @@ def run(source: str):
     parser = Parser(tokens)
     expression = parser.parse()
 
-    if had_error:
+    if had_error or expression is None:
         return
 
-    print(ast_printer(expression))
+    interpreter.interpret(expression)
 
 
 def runtime_error(error: RuntimeError):

@@ -3,6 +3,7 @@ from asyncio import Protocol
 from dataclasses import dataclass
 from functools import singledispatch
 
+import plox
 from plox.expressions import Binary, Expr, Grouping, Literal, Unary
 from plox.scanner import Token, TokenType
 
@@ -12,7 +13,7 @@ def interpret(expression: Expr):
         value = evaluate(expression)
         print(stringfy(value))
     except RuntimeError as error:
-        
+        plox.runtime_error(error)
 
 
 @singledispatch
@@ -108,8 +109,14 @@ def check_number_operands(operator: Token, left: object, right: object):
 
 
 def stringfy(value: object):
-    if object is None: return "nil"
-    return str(object)
+    if value is None:
+        return "nil"
+
+    if isinstance(value, float):
+        return str(f"{value:g}")
+
+    return str(value)
+
 
 if __name__ == "__main__":
     a = Literal(value=123)
