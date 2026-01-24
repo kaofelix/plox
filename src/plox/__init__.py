@@ -2,7 +2,9 @@ import argparse
 import sys
 from pathlib import Path
 
-from plox.scanner import Scanner
+from plox.ast_printer import ast_printer
+from plox.parser import Parser
+from plox.scanner import Scanner, Token, TokenType
 
 had_error = False
 had_runtime_error = False
@@ -34,12 +36,13 @@ def run(source: str):
     scanner = Scanner(source)
     tokens = scanner.scan_tokens()
 
-    for token in tokens:
-        print(token)
+    parser = Parser(tokens)
+    expression = parser.parse()
 
+    if had_error:
+        return
 
-def error(line: int, message: str):
-    report(line, "", message)
+    print(ast_printer(expression))
 
 
 def runtime_error(error: RuntimeError):
@@ -50,6 +53,13 @@ def runtime_error(error: RuntimeError):
 
 def report(line: int, where: str, message: str):
     print(f"[line {line}] Error {where}: {message}", file=sys.stderr)
+
+
+def error(token: Token, message: str):
+    if token.type == TokenType.EOF:
+        report(token.line, "at end", message)
+    else:
+        report(token.line, f"at '{token.lexeme}'", message)
 
 
 def main() -> None:

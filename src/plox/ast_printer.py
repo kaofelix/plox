@@ -14,7 +14,7 @@ def ast_printer(expr: Binary):
 
 @ast_printer.register
 def _(expr: Grouping):
-    return parenthesize("group", expr)
+    return parenthesize("group", expr.expression)
 
 
 @ast_printer.register
