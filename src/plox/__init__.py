@@ -1,5 +1,6 @@
 import argparse
 import sys
+from functools import singledispatch
 from pathlib import Path
 
 from plox.ast_printer import ast_printer
@@ -51,15 +52,21 @@ def runtime_error(error: RuntimeError):
     had_runtime_error = True
 
 
-def report(line: int, where: str, message: str):
-    print(f"[line {line}] Error {where}: {message}", file=sys.stderr)
+@singledispatch
+def error(line: int, message: str):
+    report(line, "", message)
 
 
-def error(token: Token, message: str):
+@error.register
+def _(token: Token, message: str):
     if token.type == TokenType.EOF:
         report(token.line, "at end", message)
     else:
         report(token.line, f"at '{token.lexeme}'", message)
+
+
+def report(line: int, where: str, message: str):
+    print(f"[line {line}] Error {where}: {message}", file=sys.stderr)
 
 
 def main() -> None:

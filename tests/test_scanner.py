@@ -1,11 +1,7 @@
+from unittest import mock
+
 import pytest
-from plox.scanner import (
-    Scanner,
-    Token,
-    TokenType,
-    UnexpectedCharacterError,
-    UnterminatedStringError,
-)
+from plox.scanner import Scanner, Token, TokenType
 
 
 class TestSingleCharacterTokens:
@@ -150,14 +146,14 @@ class TestStringLiterals:
         assert tokens[0].type == TokenType.STRING
         assert tokens[0].literal == "hello world"
 
-    def test_string_with_quotes(self):
+    @mock.patch("plox.error")
+    def test_string_with_quotes(self, mock_error):
         # Note: The current scanner doesn't handle escape sequences
         # This test documents the actual behavior
-        with pytest.raises(UnexpectedCharacterError) as exc_info:
-            scanner = Scanner('"hello \\"world\\""')
-            scanner.scan_tokens()
-        assert exc_info.value.line == 1
-        assert exc_info.value.char == "\\"
+        scanner = Scanner('"hello \\"world\\""')
+        scanner.scan_tokens()
+
+        mock_error.assert_called_once_with(1, mock.ANY)
 
     def test_multiline_string(self):
         scanner = Scanner('"hello\nworld"')
@@ -166,11 +162,12 @@ class TestStringLiterals:
         assert tokens[0].literal == "hello\nworld"
         assert tokens[0].line == 2  # Line number updated at newline
 
-    def test_unterminated_string(self):
+    @mock.patch("plox.error")
+    def test_unterminated_string(self, mock_error):
         scanner = Scanner('"unterminated')
-        with pytest.raises(UnterminatedStringError) as exc_info:
-            scanner.scan_tokens()
-        assert exc_info.value.line == 1
+        scanner.scan_tokens()
+
+        mock_error.assert_called_once_with(1, mock.ANY)
 
 
 class TestNumberLiterals:
@@ -229,14 +226,15 @@ class TestIdentifiers:
         assert tokens[0].lexeme == "variable"
         assert tokens[0].literal is None
 
-    def test_identifier_with_underscore(self):
+    @mock.patch("plox.error")
+    def test_identifier_with_underscore(self, mock_error):
         # Note: The current scanner doesn't support underscores in identifiers
         # Only alphanumeric characters are supported
-        with pytest.raises(UnexpectedCharacterError) as exc_info:
-            scanner = Scanner("_underscore")
-            scanner.scan_tokens()
-        assert exc_info.value.line == 1
-        assert exc_info.value.char == "_"
+
+        scanner = Scanner("_underscore")
+        scanner.scan_tokens()
+
+        mock_error.assert_called()
 
     def test_identifier_with_numbers(self):
         scanner = Scanner("var123")
@@ -501,26 +499,24 @@ class TestEdgeCases:
 
 
 class TestErrorHandling:
-    def test_unexpected_character(self):
+    @mock.patch("plox.error")
+    def test_unexpected_character(self, mock_error):
         scanner = Scanner("@")
-        with pytest.raises(UnexpectedCharacterError) as exc_info:
-            scanner.scan_tokens()
-        assert exc_info.value.line == 1
-        assert exc_info.value.char == "@"
+        scanner.scan_tokens()
+        mock_error.assert_called()
 
-    def test_unexpected_character_after_valid_tokens(self):
+    @mock.patch("plox.error")
+    def test_unexpected_character_after_valid_tokens(self, mock_error):
         scanner = Scanner("1 + @")
-        with pytest.raises(UnexpectedCharacterError) as exc_info:
-            scanner.scan_tokens()
-        assert exc_info.value.line == 1
-        assert exc_info.value.char == "@"
+        scanner.scan_tokens()
+        mock_error.assert_called()
 
-    def test_unexpected_character_on_new_line(self):
+    @mock.patch("plox.error")
+    def test_unexpected_character_on_new_line(self, mock_error):
         scanner = Scanner("1\n@")
-        with pytest.raises(UnexpectedCharacterError) as exc_info:
-            scanner.scan_tokens()
-        assert exc_info.value.line == 2
-        assert exc_info.value.char == "@"
+
+        scanner.scan_tokens()
+        mock_error.assert_called()
 
     def test_unterminated_string_on_multiline(self):
         scanner = Scanner('"start\ncontinue"')

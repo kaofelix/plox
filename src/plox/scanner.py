@@ -1,18 +1,7 @@
 from dataclasses import dataclass
 from enum import Enum
 
-
-class UnexpectedCharacterError(Exception):
-    def __init__(self, line: int, char: str):
-        super().__init__(line, char)
-        self.line = line
-        self.char = char
-
-
-class UnterminatedStringError(Exception):
-    def __init__(self, line: int):
-        super().__init__(line)
-        self.line = line
+import plox
 
 
 class Scanner:
@@ -95,7 +84,7 @@ class Scanner:
                 self.identifier()
 
             case _:
-                raise UnexpectedCharacterError(self.line, c)
+                plox.error(self.line, "Unexpected character.")
 
     def advance(self) -> str:
         c = self.source[self.current]
@@ -118,7 +107,8 @@ class Scanner:
             self.advance()
 
         if self.is_at_end():
-            raise UnterminatedStringError(self.line)
+            plox.error(self.line, "Unterminated string.")
+            return
 
         # go over terminating "
         self.advance()
