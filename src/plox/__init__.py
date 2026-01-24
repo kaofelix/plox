@@ -5,11 +5,17 @@ from pathlib import Path
 from plox.scanner import Scanner
 
 had_error = False
+had_runtime_error = False
 
 
 def run_file(file: Path):
     content = file.read_text()
     run(content)
+    if had_error:
+        sys.exit(65)
+
+    if had_runtime_error:
+        sys.exit(70)
 
 
 def run_prompt():
@@ -21,6 +27,7 @@ def run_prompt():
             break
 
         run(line)
+        had_error = False
 
 
 def run(source: str):
@@ -33,6 +40,12 @@ def run(source: str):
 
 def error(line: int, message: str):
     report(line, "", message)
+
+
+def runtime_error(error: RuntimeError):
+    token, message = error.args
+    print(message + "\n[line " + token.line + "]")
+    had_runtime_error = True
 
 
 def report(line: int, where: str, message: str):
