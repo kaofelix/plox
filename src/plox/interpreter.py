@@ -1,48 +1,57 @@
 from abc import ABC, abstractmethod
+from ast import stmt
 from asyncio import Protocol
 from dataclasses import dataclass
 from functools import singledispatch
 
 import plox
-from plox.expressions import Binary, Expr, Grouping, Literal, Unary
+from plox import expr, stmt
 from plox.scanner import Token, TokenType
 
 
-def interpret(expression: Expr):
+def interpret(statements: list[stmt.Stmt]):
     try:
-        value = evaluate(expression)
-        print(stringfy(value))
+        for statement in statements:
+            execute(statement)
     except RuntimeError as error:
         plox.runtime_error(error)
 
 
-@singledispatch
-def _interpret(expr: Binary):
-    left = evaluate(expr.left)
-    right = evaluate(expr.right)
+def execute(statement: stmt.Stmt):
+    _interpret(statement)
 
-    match expr.operator.type:
+
+def evaluate(expr: expr.Expr):
+    return _interpret(expr)
+
+
+@singledispatch
+def _interpret(binary: expr.Binary):
+    left = evaluate(binary.left)
+    right = evaluate(binary.right)
+
+    match binary.operator.type:
         case TokenType.GREATER:
-            check_number_operands(expr.operator, left, right)
+            check_number_operands(binary.operator, left, right)
             return float(left) > float(right)
         case TokenType.GREATER_EQUAL:
-            check_number_operands(expr.operator, left, right)
+            check_number_operands(binary.operator, left, right)
             return float(left) >= float(right)
         case TokenType.LESS:
-            check_number_operands(expr.operator, left, right)
+            check_number_operands(binary.operator, left, right)
             return float(left) < float(right)
         case TokenType.LESS_EQUAL:
-            check_number_operands(expr.operator, left, right)
+            check_number_operands(binary.operator, left, right)
             return float(left) <= float(right)
 
         case TokenType.MINUS:
-            check_number_operands(expr.operator, left, right)
+            check_number_operands(binary.operator, left, right)
             return float(left) - float(right)
         case TokenType.SLASH:
-            check_number_operands(expr.operator, left, right)
+            check_number_operands(binary.operator, left, right)
             return float(left) / float(right)
         case TokenType.STAR:
-            check_number_operands(expr.operator, left, right)
+            check_number_operands(binary.operator, left, right)
             return float(left) * float(right)
 
         case TokenType.EQUAL:
@@ -55,33 +64,42 @@ def _interpret(expr: Binary):
                 return float(left) + float(right)
             if isinstance(left, str) and isinstance(right, str):
                 return str(left) + str(right)
-            raise RuntimeError(expr.operator, "Operands must be both string or numbers")
+            raise RuntimeError(
+                binary.operator, "Operands must be both string or numbers"
+            )
 
 
 @_interpret.register
-def _(expr: Grouping):
-    return evaluate(expr.expression)
+def _(grouping: expr.Grouping):
+    return evaluate(grouping.expression)
 
 
 @_interpret.register
-def _(expr: Literal):
-    return expr.value
+def _(literal: expr.Literal):
+    return literal.value
 
 
 @_interpret.register
-def _(expr: Unary):
-    right = evaluate(expr.right)
+def _(unary: expr.Unary):
+    right = evaluate(unary.right)
 
-    match expr.operator.type:
+    match unary.operator.type:
         case TokenType.MINUS:
-            check_number_operand(expr.operator, right)
+            check_number_operand(unary.operator, right)
             return -float(right)
         case TokenType.BANG:
             return not is_truthy(right)
 
 
-def evaluate(expr: Expr):
-    return _interpret(expr)
+@_interpret.register
+def _(expression_statement: stmt.Expression):
+    evaluate(expression_statement.expression)
+
+
+@_interpret.register
+def _(print_statement: stmt.Print):
+    value = evaluate(print_statement.expression)
+    print(stringfy(value))
 
 
 def is_truthy(obj: object):

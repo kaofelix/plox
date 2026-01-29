@@ -41,12 +41,12 @@ def run(source: str):
     tokens = scanner.scan_tokens()
 
     parser = Parser(tokens)
-    expression = parser.parse()
+    statements = parser.parse()
 
-    if had_error or expression is None:
+    if had_error or statements is None:
         return
 
-    interpreter.interpret(expression)
+    interpreter.interpret(statements)
 
 
 def runtime_error(error: RuntimeError):

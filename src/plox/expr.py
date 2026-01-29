@@ -1,5 +1,4 @@
 from abc import ABC, abstractmethod
-from asyncio import Protocol
 from dataclasses import dataclass
 from functools import singledispatch
 

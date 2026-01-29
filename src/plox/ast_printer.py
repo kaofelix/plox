@@ -3,7 +3,7 @@ from asyncio import Protocol
 from dataclasses import dataclass
 from functools import singledispatch
 
-from plox.expressions import Binary, Expr, Grouping, Literal, Unary
+from plox.expr import Binary, Expr, Grouping, Literal, Unary
 from plox.scanner import Token, TokenType
 
 

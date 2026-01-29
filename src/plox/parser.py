@@ -1,6 +1,5 @@
 import plox
-from plox import expressions
-from plox.expressions import Expr
+from plox import expr, stmt
 from plox.scanner import Token, TokenType
 
 
@@ -13,27 +12,44 @@ class Parser:
         self.current = 0
         self.tokens = tokens
 
-    def parse(self) -> Expr | None:
-        try:
-            return self.expression()
-        except ParserError as error:
-            return None
+    def parse(self) -> list[stmt.Stmt]:
+        statements = []
+        while not self.is_at_end():
+            statements.append(self.statement())
+
+        return statements
+
+    def statement(self) -> stmt.Stmt:
+        if self.match(TokenType.PRINT):
+            return self.print_statement()
+
+        return self.expression_statement()
+
+    def print_statement(self):
+        value = self.expression()
+        self.consume(TokenType.SEMICOLON, "Expect ';' after value.")
+        return stmt.Print(value)
+
+    def expression_statement(self):
+        value = self.expression()
+        self.consume(TokenType.SEMICOLON, "Expect ';' after value.")
+        return stmt.Expression(value)
 
     def expression(self):
         return self.equality()
 
     def equality(self):
-        expr = self.comparison()
+        expression = self.comparison()
 
         while self.match(TokenType.BANG_EQUAL, TokenType.EQUAL_EQUAL):
             operator = self.previous()
             right = self.comparison()
-            expr = expressions.Binary(expr, operator, right)
+            expression = expr.Binary(expression, operator, right)
 
-        return expr
+        return expression
 
     def comparison(self):
-        expr = self.term()
+        expression = self.term()
 
         while self.match(
             TokenType.GREATER,
@@ -43,53 +59,53 @@ class Parser:
         ):
             operator = self.previous()
             right = self.term()
-            expr = expressions.Binary(expr, operator, right)
+            expression = expr.Binary(expression, operator, right)
 
-        return expr
+        return expression
 
     def term(self):
-        expr = self.factor()
+        expression = self.factor()
 
         while self.match(TokenType.MINUS, TokenType.PLUS):
             operator = self.previous()
             right = self.factor()
-            expr = expressions.Binary(expr, operator, right)
+            expression = expr.Binary(expression, operator, right)
 
-        return expr
+        return expression
 
     def factor(self):
-        expr = self.unary()
+        expression = self.unary()
 
         while self.match(TokenType.SLASH, TokenType.STAR):
             operator = self.previous()
             right = self.unary()
-            expr = expressions.Binary(expr, operator, right)
+            expression = expr.Binary(expression, operator, right)
 
-        return expr
+        return expression
 
     def unary(self):
         if self.match(TokenType.BANG, TokenType.MINUS):
             operator = self.previous()
             right = self.unary()
-            return expressions.Unary(operator, right)
+            return expr.Unary(operator, right)
 
         return self.primary()
 
     def primary(self):
         if self.match(TokenType.FALSE):
-            return expressions.Literal(False)
+            return expr.Literal(False)
         if self.match(TokenType.TRUE):
-            return expressions.Literal(True)
+            return expr.Literal(True)
         if self.match(TokenType.NIL):
-            return expressions.Literal(None)
+            return expr.Literal(None)
 
         if self.match(TokenType.NUMBER, TokenType.STRING):
-            return expressions.Literal(self.previous().literal)
+            return expr.Literal(self.previous().literal)
 
         if self.match(TokenType.LEFT_PAREN):
-            expr = self.expression()
+            expression = self.expression()
             self.consume(TokenType.RIGHT_PAREN, "Expect ')' after expression")
-            return expressions.Grouping(expr)
+            return expr.Grouping(expression)
 
         raise self.error(self.peek(), "Expect expression.")
 
