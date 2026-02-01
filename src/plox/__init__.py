@@ -14,14 +14,15 @@ had_error = False
 had_runtime_error = False
 
 
-def run_file(file: Path):
-    content = file.read_text()
-    run(content)
-    if had_error:
-        sys.exit(65)
+def run_file(path: Path):
+    with open(path) as file:
+        content = file.read()
+        run(content)
+        if had_error:
+            sys.exit(65)
 
-    if had_runtime_error:
-        sys.exit(70)
+        if had_runtime_error:
+            sys.exit(70)
 
 
 def run_prompt():

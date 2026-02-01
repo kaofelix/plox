@@ -6,7 +6,10 @@ from functools import singledispatch
 
 import plox
 from plox import expr, stmt
+from plox.environment import Environment
 from plox.scanner import Token, TokenType
+
+environment = Environment()
 
 
 def interpret(statements: list[stmt.Stmt]):
@@ -92,6 +95,18 @@ def _(unary: expr.Unary):
 
 
 @_interpret.register
+def _(variable: expr.Variable):
+    return environment.get(variable.name)
+
+
+@_interpret.register
+def _(assignment: expr.Assign):
+    value = evaluate(assignment.value)
+    environment.assign(assignment.name, value)
+    return value
+
+
+@_interpret.register
 def _(expression_statement: stmt.Expression):
     evaluate(expression_statement.expression)
 
@@ -100,6 +115,31 @@ def _(expression_statement: stmt.Expression):
 def _(print_statement: stmt.Print):
     value = evaluate(print_statement.expression)
     print(stringfy(value))
+
+
+@_interpret.register
+def _(var_declaration: stmt.Var):
+    value = None
+    if var_declaration.initializer:
+        value = evaluate(var_declaration.initializer)
+
+    environment.define(var_declaration.name.lexeme, value)
+
+
+@_interpret.register
+def _(block: stmt.Block):
+    execute_block(block.statements, Environment(environment))
+
+
+def execute_block(statements: list[stmt.Stmt], previous_environment: Environment):
+    global environment
+    previous_environment = environment
+    try:
+        environment = previous_environment
+        for statement in statements:
+            execute(statement)
+    finally:
+        environment = previous_environment
 
 
 def is_truthy(obj: object):

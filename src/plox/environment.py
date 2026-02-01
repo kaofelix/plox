@@ -1,0 +1,29 @@
+from plox.scanner import Token
+
+
+class Environment:
+    def __init__(self, enclosing: "Environment | None" = None):
+        self.enclosing = enclosing
+        self.values: dict[str, object] = {}
+
+    def define(self, name: str, value: object):
+        self.values[name] = value
+
+    def get(self, name: Token):
+        if name.lexeme in self.values:
+            return self.values[name.lexeme]
+
+        if self.enclosing:
+            return self.enclosing.get(name)
+
+        raise RuntimeError(name, f"Undefined variable {name.lexeme}.")
+
+    def assign(self, name: Token, value: object):
+        if name.lexeme in self.values:
+            self.values[name.lexeme] = value
+
+        if self.enclosing:
+            self.enclosing.assign(name, value)
+            return
+
+        raise RuntimeError(name, f"Undefined variable {name.lexeme}.")
