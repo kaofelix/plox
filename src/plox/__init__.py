@@ -5,7 +5,7 @@ from pathlib import Path
 
 from packaging.tags import interpreter_name
 
-from plox import interpreter
+from plox import interpreter, stmt
 from plox.ast_printer import ast_printer
 from plox.parser import Parser
 from plox.scanner import Scanner, Token, TokenType
@@ -33,11 +33,11 @@ def run_prompt():
             print("Exiting...")
             break
 
-        run(line)
+        run(line, print_expressions=True)
         had_error = False
 
 
-def run(source: str):
+def run(source: str, print_expressions=False):
     scanner = Scanner(source)
     tokens = scanner.scan_tokens()
 
@@ -46,6 +46,12 @@ def run(source: str):
 
     if had_error or statements is None:
         return
+
+    if print_expressions:
+        statements = [
+            stmt.Print(s.expression) if isinstance(s, stmt.Expression) else s
+            for s in statements
+        ]
 
     interpreter.interpret(statements)
 
